@@ -141,9 +141,9 @@ the total differs from the service's own count.
    ```
    pip install -r requirements.txt
    ```
-   `addressvault` is the local link-gate package the sibling projects share; it
-   is not on PyPI. Like the sidewalks layer, this needs **shapely 2, numpy and
-   pyproj** for the spatial index and the metric projection.
+  `addressvault` is installed from its pinned GitHub source in
+  `requirements.txt`; it is not on PyPI. The comparison also needs **shapely 2,
+  numpy and pyproj** for the spatial index and metric projection.
 2. On Windows, set up WSL2 + tippecanoe once &mdash; see
    [wsl-setup.md](wsl-setup.md). Elsewhere, install tippecanoe (2.49+) and the
    vector step runs it directly.

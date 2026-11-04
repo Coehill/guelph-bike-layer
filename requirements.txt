@@ -1,4 +1,4 @@
-addressvault
+addressvault @ git+https://github.com/skfd/address-vault.git@84a05df2116e555843b58f4ea159e48c7ea0fc61
 requests
 Pillow
 ijson
