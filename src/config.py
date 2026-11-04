@@ -164,6 +164,7 @@ PATH_HIGHWAYS = (
 # such a reply from any mirror: the gap page asserts timestamp_osm_base, not
 # merely that the request came back.
 OVERPASS_URLS = (
+    "https://overpass.private.coffee/api/interpreter",
     "https://overpass-api.de/api/interpreter",
     "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
 )
