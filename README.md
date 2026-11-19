@@ -144,12 +144,14 @@ On Linux, create a project environment using
 
 ```sh
 uv venv --python python3 .venv
+uv pip install --python .venv/bin/python 'git+https://github.com/skfd/layer-kit.git'
 uv pip install --python .venv/bin/python -r requirements.txt
 ```
 
 `addressvault` is installed from its pinned GitHub source in
-`requirements.txt`, not PyPI. The comparison also needs **shapely 2, numpy
-and pyproj**.
+`requirements.txt`. [`layerkit`](https://github.com/skfd/layer-kit) provides
+shared Overpass, history and publish plumbing; neither package is on PyPI.
+The comparison also needs **shapely 2, numpy and pyproj**.
 
 On Windows, set up WSL2 + tippecanoe once; see [wsl-setup.md](wsl-setup.md).
 Elsewhere, install tippecanoe (2.49+) and the vector step runs it directly.
