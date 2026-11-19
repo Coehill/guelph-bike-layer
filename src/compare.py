@@ -135,10 +135,13 @@ def compare():
     print(f"City lines: {len(city):,}")
 
     gaps, summary = match(city, osm)
+    legacy_routes = _legacy_route_migration_rows(city, osm)
+    gaps.extend(legacy_routes)
     _write_gaps(gaps)
 
     summary.update({"osm_bikeways": len(osm["bikeway"]),
                     "osm_routes": len({w["id"] for w in osm["route"]}),
+                    "legacy_route": len(legacy_routes),
                     "osm_date": osm_date, "osm_stale": from_cache})
     with open(config.GAPS_COUNT_PATH, "w", encoding="utf-8") as f:
         json.dump(summary, f, indent=2)
@@ -447,10 +450,12 @@ def route_tagged(tags):
     """Does a road say it is a bike route, without a relation?
 
     Any positive cycleway value will do, and so does bicycle=designated, which
-    is how Guelph's signed shared streets are mostly tagged -- often beside a
-    cycleway:both=no, since a signed route has no lane.
+    is how Guelph's signed shared streets are mostly tagged. Legacy lcn=yes
+    also counts as coverage, though those roads are listed for migration.
     """
-    return lane_state(tags, "any") == "pos" or tags.get("bicycle") == "designated"
+    return (lane_state(tags, "any") == "pos"
+            or tags.get("bicycle") == "designated"
+            or tags.get("lcn") == "yes")
 
 
 def bike_access(tags):
@@ -855,6 +860,46 @@ def _write_gaps(gaps):
     with open(config.GAPS_GEOJSON_PATH, "w", encoding="utf-8") as f:
         json.dump({"type": "FeatureCollection", "features": gaps}, f,
                   separators=(",", ":"))
+
+
+def _legacy_route_migration_rows(city, osm):
+    """Find signed-route features carried by lcn=yes but not a route relation."""
+    candidates = [c for c in city
+                  if group_of(c["props"]) == "route"
+                  and c["props"].get("status") == "in_service"]
+    if not candidates:
+        return []
+
+    pts, bear, weights, owner = _sample(candidates)
+    roads = _aligned(pts, bear, osm["road"], config.ROAD_M)
+    routes = _aligned(pts, bear, osm["route"], config.ROUTE_M)
+    legacy_ways = [Counter() for _ in candidates]
+    names = [Counter() for _ in candidates]
+    for k in range(len(pts)):
+        road_index = roads["idx"][k]
+        if road_index < 0 or routes["idx"][k] >= 0:
+            continue
+        road = osm["road"][road_index]
+        if road["tags"].get("lcn") != "yes":
+            continue
+        city_index = owner[k]
+        legacy_ways[city_index][road["id"]] += weights[k]
+        if road["tags"].get("name"):
+            names[city_index][road["tags"]["name"]] += weights[k]
+
+    migration_rows = []
+    for i, ways in enumerate(legacy_ways):
+        if not ways:
+            continue
+        city_feature = candidates[i]
+        props = city_feature["props"]
+        street = names[i].most_common(1)[0][0] if names[i] else props.get("street", "")
+        migration_rows.append(_gap_feature(
+            city_feature, "legacy_route", None, sum(ways.values()), 0,
+            street, None, ways.most_common(1)[0][0],
+            "Add to a route=bicycle relation (network=lcn)",
+        ))
+    return migration_rows
 
 
 def _km(m):

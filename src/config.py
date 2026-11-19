@@ -166,7 +166,6 @@ PATH_HIGHWAYS = (
 OVERPASS_URLS = (
     "https://overpass.private.coffee/api/interpreter",
     "https://overpass-api.de/api/interpreter",
-    "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
 )
 OVERPASS_TIMEOUT = 600
 OVERPASS_ROUNDS = 3

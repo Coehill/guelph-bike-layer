@@ -105,8 +105,8 @@ midpoint asks:
   A cycle track checks for a cycleway, or a `cycleway:<side>=track` on the
   road, before the sidewalk beside it.
 - **Signed routes:** a relation member within 15 m, a separate cycleway, or a
-  road with a positive cycleway value or `bicycle=designated` (how Guelph
-  mostly tags its signed shared streets).
+  road with a positive cycleway value, `bicycle=designated`, or legacy `lcn=yes`.
+  The gap page lists legacy route-tag migration separately from unsigned routes.
 
 A road or cycleway only answers when its direction agrees with the City
 line's within 30°: at an intersection the nearest road is often the cross
