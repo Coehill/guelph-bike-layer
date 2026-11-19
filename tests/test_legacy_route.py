@@ -55,10 +55,6 @@ def test_compare_includes_legacy_routes_in_gap_geojson_and_summary(
                         lambda _city, _osm: [legacy])
     monkeypatch.setattr(compare, "_write_gaps",
                         lambda features: written.setdefault("gaps", features))
-    monkeypatch.setattr(compare, "_write_gap_review_csv",
-                        lambda *args, **kwargs: None, raising=False)
-    monkeypatch.setattr(compare, "_city_snapshot_date",
-                        lambda: "2026-11-03", raising=False)
     monkeypatch.setattr(config, "GAPS_COUNT_PATH", str(tmp_path / "summary.json"))
     monkeypatch.setattr(compare.history, "record", lambda _summary: None)
 

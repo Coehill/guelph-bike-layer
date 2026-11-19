@@ -110,9 +110,11 @@ midpoint asks:
 
 A road or cycleway only answers when its direction agrees with the City
 line's within 30°: at an intersection the nearest road is often the cross
-street. A segment is in OSM at &ge;70% covered (by length); otherwise it is a
-gap, named by what most of its uncovered length says. Gaps under 15 m (the
-corner pieces of protected intersections) are not listed. The full rule is in
+street. For on-road lanes, an aligned non-link road with the City's street
+name within 20 m is preferred over a motorway ramp. A segment is in OSM at
+&ge;70% covered (by length); otherwise it is a gap, named by what most of its
+uncovered length says. Gaps under 15 m (the corner pieces of protected
+intersections) are not listed. The full rule is in
 [`src/compare.py`](src/compare.py)'s docstring; matching runs in UTM 17N
 metres with shapely's STRtree and takes about a second; the Overpass
 fetch takes ~40 s.

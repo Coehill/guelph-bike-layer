@@ -27,6 +27,8 @@ side" -- positive if any of the four keys is -- and its segment says so.
 Roads and separate cycleways only count when their direction agrees with the
 City line's (BEARING_MAX_DEG): at an intersection the nearest road is often
 the cross street, whose tags say nothing about this lane.
+For on-road lanes, an aligned non-link road with the City's street name within
+ROAD_M is preferred over a motorway ramp.
 
 Where the City records a buffer, a covered sample also asks whether OSM has
 it: a separate cycleway, a cycleway:<side>:separation* or :buffer* key, or
@@ -138,7 +140,6 @@ def compare():
     legacy_routes = _legacy_route_migration_rows(city, osm)
     gaps.extend(legacy_routes)
     _write_gaps(gaps)
-
     summary.update({"osm_bikeways": len(osm["bikeway"]),
                     "osm_routes": len({w["id"] for w in osm["route"]}),
                     "legacy_route": len(legacy_routes),
@@ -516,6 +517,27 @@ def match(city, osm, today=None):
     grp = np.array([groups[i] for i in owner], dtype=object)
 
     roads = _aligned(pts, bear, osm["road"], config.ROAD_M)
+    ramp_samples = defaultdict(list)
+    for k, (group, r) in enumerate(zip(grp, roads["idx"])):
+        if group == "lane" and r >= 0 \
+                and osm["road"][r]["tags"].get("highway") == "motorway_link":
+            name = city[owner[k]]["props"].get("street") or ""
+            if name.strip():
+                ramp_samples[" ".join(name.casefold().split())].append(k)
+    for name, samples in ramp_samples.items():
+        non_ramp = [i for i, way in enumerate(osm["road"])
+                    if not way["tags"].get("highway", "").endswith("_link")
+                    and " ".join((way["tags"].get("name") or "").casefold().split()) == name]
+        if not non_ramp:
+            continue
+        samples = np.asarray(samples)
+        alternatives = _aligned(pts[samples], bear[samples],
+                                [osm["road"][i] for i in non_ramp], config.ROAD_M)
+        found = alternatives["idx"] >= 0
+        samples = samples[found]
+        roads["idx"][samples] = np.asarray(non_ramp)[alternatives["idx"][found]]
+        roads["dist"][samples] = alternatives["dist"][found]
+        roads["side"][samples] = alternatives["side"][found]
     bikeways = _aligned(pts, bear, osm["bikeway"], config.BIKEWAY_M)
     paths = _aligned(pts, bear, osm["path"], config.PATH_M, fallback=True)
     path_bikeways = _aligned(pts, bear, osm["bikeway"], config.PATH_M,
