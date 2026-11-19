@@ -137,35 +137,55 @@ the total differs from the service's own count.
 
 ## Setup
 
-1. Install Python dependencies:
-   ```
-   pip install -r requirements.txt
-   ```
-  `addressvault` is installed from its pinned GitHub source in
-  `requirements.txt`; it is not on PyPI. The comparison also needs **shapely 2,
-  numpy and pyproj** for the spatial index and metric projection.
-2. On Windows, set up WSL2 + tippecanoe once &mdash; see
-   [wsl-setup.md](wsl-setup.md). Elsewhere, install tippecanoe (2.49+) and the
-   vector step runs it directly.
+On Linux, create a project environment using
+[uv](https://docs.astral.sh/uv/getting-started/installation/):
+
+```sh
+uv venv --python python3 .venv
+uv pip install --python .venv/bin/python -r requirements.txt
+```
+
+`addressvault` is installed from its pinned GitHub source in
+`requirements.txt`, not PyPI. The comparison also needs **shapely 2, numpy
+and pyproj**.
+
+On Windows, set up WSL2 + tippecanoe once; see [wsl-setup.md](wsl-setup.md).
+Elsewhere, install tippecanoe (2.49+) and the vector step runs it directly.
 
 ## Usage
 
-```
-python run.py download   # fetch the Bike Facilities layer, page by page (smart-cached)
-python run.py slim       # reduce to a slim GeoJSONL
-python run.py compare    # diff City facilities against OSM -> data/gaps.geojson
-python run.py vector     # build vector (MVT) tiles via tippecanoe
-python run.py raster     # build line raster (PNG) tiles
-python run.py site       # render the landing page (+ the work list and history)
-python run.py publish    # force-push the site to the gh-pages branch
+These commands use the Linux environment path; on Windows, use
+`.venv\Scripts\python.exe` with a Windows virtual environment.
 
-python run.py build      # download + slim + compare + vector + raster + site
-python run.py update     # build + publish  (the scheduled entry point)
+```sh
+.venv/bin/python run.py download   # fetch the City layer (smart-cached)
+.venv/bin/python run.py slim       # reduce to a slim GeoJSONL
+.venv/bin/python run.py compare    # compare City facilities with OSM
+.venv/bin/python run.py vector     # build MVT tiles via tippecanoe
+.venv/bin/python run.py raster     # build PNG tiles
+.venv/bin/python run.py site       # render local pages and history
+.venv/bin/python run.py publish    # force-push generated site to origin/gh-pages
+
+.venv/bin/python run.py build      # build locally, without publishing
+.venv/bin/python run.py update     # build + publish (scheduled entry point)
 ```
 
 Build output lands in `build/site/`; that directory is what gets published.
 The first full build (2026-10-24): 5,963 vector tiles and 1,104 raster tiles,
 about two minutes in all.
+
+A cached comparison is marked `osm_stale: true` in `data/gaps.count.json` and
+is not a fresh editing baseline.
+
+For a local preview after `site`, run:
+
+```sh
+.venv/bin/python -m http.server 8000 --bind 127.0.0.1 --directory build/site
+```
+
+Open http://127.0.0.1:8000/gaps/. `site` uses saved data; run `download`,
+`slim`, and `compare` first to refresh it. `publish` and `update` force-push to
+`origin/gh-pages`: check `git remote -v` first. A PR merge does not deploy.
 
 ## Scheduling (Windows)
 
@@ -179,9 +199,29 @@ the same day, and the slots exist so no two builds drive tippecanoe at once.
 
 ## Tests
 
+```sh
+uv pip install --python .venv/bin/python pytest
+.venv/bin/python -m pytest
 ```
-pytest
+
+## AI development
+
+The [Spec Kit](https://github.com/github/spec-kit) scaffold and Copilot skills
+are in [.specify/](.specify/) and [.github/skills/](.github/skills/). For
+feature work, run `/speckit-clarify` before `/speckit-plan`; Git branches and
+commits remain manual. To install the matching CLI with Python 3.11+ and uv:
+
+```sh
+uv tool install specify-cli==1.3.0
+specify version
 ```
+
+Ensure `uv tool dir --bin` is on `PATH`; `specify init --force` can replace
+managed files. Project notes are in [docs/context.md](docs/context.md).
+
+The optional [tagging-schema MCP server](.mcp.json) uses nvm and Node 26 for
+schema lookups; it does not query or edit OSM. Verify its suggestions against
+OSM documentation and current evidence.
 
 ## Licence / attribution
 
